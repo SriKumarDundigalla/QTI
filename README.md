@@ -72,6 +72,90 @@ The script defines several functions:
 - `read_and_convert_file(file_name)`: Reads the specified Markdown file and returns the converted content.
 - `run_text2qti(output_file)`: Runs the `text2qti` command on the given file (used when `--convert` flag is present).
 
----
+--------------------------------------------------------------------------------------------------------------------
 
-This README provides an overview of the script's functionality, its regular expressions, and usage instructions. You can place this in your GitHub repository to serve as documentation for users who want to understand and use your script.
+# text2qti api
+
+`text2qti` is a Python package that converts text files into quizzes in QTI (Question and Test Interoperability) format. It's particularly useful for creating quizzes that can be imported into learning management systems like Canvas. Here's a detailed overview of the different types of questions you can create with `text2qti` and their explanations:
+
+### 1. Multiple-Choice Questions
+- **Syntax**: Questions are numbered and followed by possible answers, which are labeled with lowercase letters followed by a parenthesis. The correct answer is marked with an asterisk (`*`).
+- **Example**:
+  ```
+  1. What is the capital of France?
+  a) Berlin
+  b) Madrid
+  *c) Paris
+  ```
+
+### 2. Multiple-Answers Questions
+- **Syntax**: Similar to multiple-choice, but more than one answer can be correct. Incorrect answers are marked with `[]`, and correct answers with `[*]`.
+- **Example**:
+  ```
+  1. Which of the following are European countries?
+  [*] Germany
+  [ ] Brazil
+  [*] Italy
+  [ ] Canada
+  ```
+
+### 3. True/False Questions
+- **Syntax**: These are a simple form of multiple-choice questions with only two options, true and false.
+- **Example**:
+  ```
+  1. The Earth is flat.
+  *a) False
+  b) True
+  ```
+
+### 4. Short-Answer (Fill-in-the-Blank) Questions
+- **Syntax**: The answer is preceded by an asterisk and space. Multiple acceptable answers can be provided.
+- **Example**:
+  ```
+  1. Who wrote "To Kill a Mockingbird"?
+  * Harper Lee
+  ```
+
+### 5. Essay Questions
+- **Syntax**: Indicated by a sequence of three or more underscores. They typically support general question feedback but not specific answers.
+- **Example**:
+  ```
+  1. Discuss the impact of globalization.
+  ___
+  ```
+
+### 6. Numerical Questions
+- **Syntax**: Use an equals sign followed by the numerical answer. You can specify a range or an exact answer with a margin of error.
+- **Example**:
+  ```
+  1. What is the value of Pi (up to 2 decimal places)?
+  = 3.14 +- 0.01
+  ```
+
+### 7. File-Upload Questions
+- **Syntax**: Indicated by a sequence of three or more circumflex accents. Like essay questions, they mainly support general feedback.
+- **Example**:
+  ```
+  1. Upload a file containing your project proposal.
+  ^^^^
+  ```
+
+### 8. Text Regions
+- **Syntax**: Not a question type but allows you to include additional text sections within a quiz.
+- **Example**:
+  ```
+  Text: Please read the following instructions carefully before proceeding.
+  ```
+
+### Additional Features
+- **Question Groups**: Randomly selects a specified number of questions from a set.
+- **Executable Code Blocks**: Executes Python code to dynamically generate questions.
+- **Quiz Options**: Settings for answer shuffling, showing correct answers, etc.
+- Markdown syntax is heavily used for formatting text, so familiarity with Markdown is beneficial.
+- The package is designed with Canvas LMS in mind, but the generated QTI files might work with other systems that support QTI.
+
+### Installation
+`text2qti` can be installed via pip:
+```bash
+python -m pip install text2qti
+```
