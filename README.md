@@ -26,7 +26,9 @@ This application converts Markdown files containing questions and learning outco
 
 5. **Upload to Learning Platform**: The application generates QTI files in a zip format, which you can upload to various learning platforms. This allows you to create quizzes and save them to question banks.
 
-6. **Output Files**: The output includes quizzes for all learning outcomes and an aggregated question file. The aggregated file's title combines the main title from your Markdown file and the prefix you provided.
+6. **Output Files**: All these files are neatly organized in an output folder created by the application. Inside this folder, you'll find two subfolders:
+   - **Text Files**: Contains all the quiz files in plain text format.
+   - **QTI Files**: Contains the QTI formatted files, ready to be uploaded to your learning management system.
 
 ### Technical Details
 - This application is developed in Python 3 and uses libraries such as `re` (for regular expressions), `subprocess`, and `os`.
