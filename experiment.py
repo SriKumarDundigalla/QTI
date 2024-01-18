@@ -79,7 +79,7 @@ def summarize_large_files(filepath, content):
 
 # Main execution
 if __name__ == "__main__":
-    directory_path = "C:/Users/dsksr/Documents/BIG DATA/2024/QTI/GIT/QTI-AI/QTI"
+    directory_path = "Folder dir path"
     file_details = analyze_directory(directory_path)
     file_contents = get_file_contents(file_details)
 
