@@ -3,8 +3,6 @@ import PyPDF2
 import openai
 import tiktoken
 from dotenv import load_dotenv
-# Function to analyze the directory
-
 import logging
 
 # Configure basic logging
@@ -18,6 +16,7 @@ def analyze_directory(directory):
     :param directory: The path of the directory to analyze.
     :return: A list of dictionaries, each containing 'name', 'type', 'size', and 'path' of the file.
     """
+    logging.info(f"Analyzing directory: {directory}")
     supported_extensions = {'.md', '.ipynb', '.py', '.pdf'}
     file_details = []
 
@@ -34,51 +33,54 @@ def analyze_directory(directory):
                     'path': file_path
                 }
                 file_details.append(file_info)
+                logging.info(f"File added for processing: {file_path}")
 
     return file_details
 
-
 def read_file_content(file_info):
     """
-    Reads the content of a file based on its type.
+    Reads the content of a file based on its type and returns the content as a string.
 
-    :param file_info: Dictionary containing 'name', 'type', 'size', and 'path' of the file.
-    :return: The content of the file as a string.
+    :param file_info: Dictionary containing the file's details.
+    :return: Content of the file as a string.
     """
     file_path = file_info['path']
     file_type = file_info['type']
+    content = ''
 
-    if file_type == '.pdf':
-        content = ''
-        with open(file_path, 'rb') as f:
-            reader = PyPDF2.PdfReader(f)
-            for page in reader.pages:
-                content += page.extract_text()
-        return content
+    try:
+        if file_type == '.pdf':
+            with open(file_path, 'rb') as f:
+                reader = PyPDF2.PdfReader(f)
+                for page in reader.pages:
+                    content += page.extract_text()
+        else:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
 
-    with open(file_path, 'r', encoding='utf-8') as f:
-        return f.read()
+        logging.info(f"Successfully read content from: {file_path}")
+    except Exception as e:
+        logging.exception(f"Error reading {file_path}: {e}")
+
+    return content
 
 def get_file_contents(file_details):
     """
-    Gets the contents of files based on the details provided.
+    Retrieves the contents of each file based on the provided file details.
 
     :param file_details: List of dictionaries containing file details.
     :return: A list of dictionaries, each containing 'path' and 'content' of the file.
     """
     content_details = []
     for file_info in file_details:
-        try:
-            file_content = read_file_content(file_info)
+        file_content = read_file_content(file_info)
+        if file_content:
             content_details.append({
                 'path': file_info['path'],
                 'content': file_content
             })
-        except Exception as e:
-            print(f"Error reading {file_info['path']}: {e}")
-   
-    return content_details
 
+    return content_details
 
 def summarize_text(api_key, text, min_words, max_words):
     """
@@ -117,42 +119,29 @@ def summarize_text(api_key, text, min_words, max_words):
 
             summary = response.choices[0].message.content.strip()
             summary_word_count = len(summary.split())
-            print(summary_word_count)
             if min_words <= summary_word_count <= max_words:
                 break
 
         return summary
     else:
         return None
+    
 
 # Main execution
 if __name__ == "__main__":
-    # Load environment variables from a .env file
     load_dotenv()
-
-    # Specify the directory path to analyze
     directory_path = "C:/Users/dsksr/Documents/BIG DATA/2024/QTI/GIT/QTI-AI/QTI"
-
-    # Retrieve the OpenAI API key from environment variables
     api_key = os.getenv('OPENAI_API_KEY')
-
-    # Define the minimum and maximum word count for summaries
     min_words = 50
     max_words = 100
 
-    # Analyze the specified directory and get file details
-    # This includes the name, type, size, and path of each file
-    file_details = analyze_directory(directory_path)
+    try:
+        file_details = analyze_directory(directory_path)
+        file_contents = get_file_contents(file_details)
 
-    # Read the contents of each file found in the directory
-    file_contents = get_file_contents(file_details)
+        for file in file_contents:
+            summarized_content = summarize_text(api_key, file['content'], min_words, max_words)
+            logging.info(f"File summarized: {file['path']}\nContent: {summarized_content}\n")
 
-    # Iterate through each file's contents
-    for file in file_contents:
-        # Summarize the content of the file if it exceeds the global token size limit
-        summarized_content = summarize_text(api_key, file['content'], min_words, max_words)
-
-        # Print the path of the file and its summarized content
-        # If the content is not summarized (below token limit), it prints 'None'
-        print(f"File: {file['path']}\nContent: {summarized_content}\n")
-
+    except Exception as e:
+        logging.exception(f"An error occurred during execution: {e}")
