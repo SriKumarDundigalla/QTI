@@ -129,19 +129,35 @@ def summarize_text(api_key, text, min_words, max_words):
 
 # Main execution
 if __name__ == "__main__":
+    # Load environment variables from the .env file
     load_dotenv()
+
+    # Define the path of the directory to analyze
     directory_path = "C:/Users/dsksr/Documents/BIG DATA/2024/QTI/GIT/QTI-AI/QTI"
+
+    # Retrieve the OpenAI API key from environment variables
     api_key = os.getenv('OPENAI_API_KEY')
+
+    # Set the minimum and maximum word limits for the summaries
     min_words = 50
     max_words = 100
 
     try:
+        # Analyze the directory and get details of the files present
         file_details = analyze_directory(directory_path)
+
+        # Retrieve the contents of each file from the analyzed directory
         file_contents = get_file_contents(file_details)
 
+        # Loop through each file and process its contents
         for file in file_contents:
+            # Summarize the content of the file using the OpenAI API
             summarized_content = summarize_text(api_key, file['content'], min_words, max_words)
+
+            # Log the information about the file and its summarized content
             logging.info(f"File summarized: {file['path']}\nContent: {summarized_content}\n")
 
+    # Catch and log any exceptions that occur during the execution
     except Exception as e:
         logging.exception(f"An error occurred during execution: {e}")
+
