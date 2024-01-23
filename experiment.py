@@ -94,7 +94,7 @@ def summarize_files(api_key, file_details, min_words, max_words):
     :return: A list of dictionaries with filename/path and file content.
     """
     global_token_size = int(os.getenv('GLOBAL_TOKEN_SIZE'))
-    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo-1106")
     summarized_files = []
 
     for file in file_details:
@@ -106,7 +106,7 @@ def summarize_files(api_key, file_details, min_words, max_words):
             prompt_user = f"Summarize the text delimited by triple quotes between {min_words} and {max_words} words.'''{file['content']}'''"
 
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-3.5-turbo-1106",
                 messages=[
                     {"role": "system", "content": prompt_system},
                     {"role": "user", "content": prompt_user}
