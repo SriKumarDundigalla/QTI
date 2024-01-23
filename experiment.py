@@ -151,9 +151,11 @@ if __name__ == "__main__":
         # Summarize the content of the files using the OpenAI API
         summarized_contents = summarize_files(api_key, file_contents, min_words, max_words)
 
-        # Log the information about the files and their summarized content
+        # Log the information about the files and their summarized content if it's within the specified word range
         for file in summarized_contents:
-            logging.info(f"File summarized: {file['path']}\nContent: {file['content']}\n")
+            word_count = len(file['content'].split())
+            if min_words <= word_count <= max_words:
+                logging.info(f"File summarized: {file['path']}\nContent: {file['content']}\n")
 
     # Catch and log any exceptions that occur during the execution
     except Exception as e:
