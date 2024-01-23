@@ -119,7 +119,6 @@ def summarize_files(api_key, file_details, min_words, max_words):
             file_content = summary
         else:
             file_content = file['content']
-            print(file_content)
 
         summarized_files.append({'path': file['path'], 'content': file_content})
 
