@@ -82,50 +82,48 @@ def get_file_contents(file_details):
 
     return content_details
 
-def summarize_text(api_key, text, min_words, max_words):
+def summarize_files(api_key, file_details, min_words, max_words):
     """
-    Summarize the provided text to a summary between min_words and max_words in length if it exceeds the GLOBAL_TOKEN_SIZE.
+    Processes a list of file details and returns a data structure with filename/path and file content.
+    Files with content that exceeds the specified token size are summarized using the ChatGPT API.
 
     :param api_key: Your OpenAI API key.
-    :param text: The text to summarize.
+    :param file_details: List of dictionaries with file details.
     :param min_words: The minimum word count of the summary.
     :param max_words: The maximum word count of the summary.
-    :return: A summary of the text within the specified word range if token count exceeds GLOBAL_TOKEN_SIZE.
+    :return: A list of dictionaries with filename/path and file content.
     """
-    global_token_size = int(os.getenv('GLOBAL_TOKEN_SIZE'))
+    global_token_size = int(os.getenv('GLOBAL_TOKEN_SIZE', '8000'))
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
-    token_count = len(encoding.encode(text))
-   
-    if token_count > global_token_size:
-        client = openai.OpenAI(api_key=api_key)
-        
-        # System prompt with context as a professor developing content for business analytics
-        prompt_system = "You are a professor developing content for a course in business analytics. You will be provided with a text content. Summarize the content without losing information on the important topics covered in the text."
+    summarized_files = []
 
-        # User prompt asking to summarize the text within a specified word range
-        prompt_user = f"Summarize the text delimited by triple quotes between {min_words} and {max_words} words.'''{text}'''"
+    for file in file_details:
+        token_count = len(encoding.encode(file['content']))
 
-        while True:
+        if token_count > global_token_size:
+            client = openai.OpenAI(api_key=api_key)
+            prompt_system = "You are a professor developing content for a course in business analytics. You will be provided with text content. Summarize the content without losing information on the important topics covered in the text."
+            prompt_user = f"Summarize the text delimited by triple quotes between {min_words} and {max_words} words.'''{file['content']}'''"
+
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": prompt_system},
                     {"role": "user", "content": prompt_user}
                 ],
-                max_tokens=250,  # Adjust as needed
+                max_tokens=250,
                 stop=None,
                 temperature=0.7
             )
-
             summary = response.choices[0].message.content.strip()
-            summary_word_count = len(summary.split())
-            if min_words <= summary_word_count <= max_words:
-                break
+            file_content = summary
+        else:
+            file_content = file['content']
 
-        return summary
-    else:
-        return None
-    
+        summarized_files.append({'path': file['path'], 'content': file_content})
+
+    return summarized_files
+
 
 # Main execution
 if __name__ == "__main__":
@@ -149,13 +147,12 @@ if __name__ == "__main__":
         # Retrieve the contents of each file from the analyzed directory
         file_contents = get_file_contents(file_details)
 
-        # Loop through each file and process its contents
-        for file in file_contents:
-            # Summarize the content of the file using the OpenAI API
-            summarized_content = summarize_text(api_key, file['content'], min_words, max_words)
+        # Summarize the content of the files using the OpenAI API
+        summarized_contents = summarize_files(api_key, file_contents, min_words, max_words)
 
-            # Log the information about the file and its summarized content
-            logging.info(f"File summarized: {file['path']}\nContent: {summarized_content}\n")
+        # Log the information about the files and their summarized content
+        for file in summarized_contents:
+            logging.info(f"File summarized: {file['path']}\nContent: {file['content']}\n")
 
     # Catch and log any exceptions that occur during the execution
     except Exception as e:
