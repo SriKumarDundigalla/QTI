@@ -93,7 +93,7 @@ def summarize_files(api_key, file_details, min_words, max_words):
     :param max_words: The maximum word count of the summary.
     :return: A list of dictionaries with filename/path and file content.
     """
-    global_token_size = int(os.getenv('GLOBAL_TOKEN_SIZE', '8000'))
+    global_token_size = int(os.getenv('GLOBAL_TOKEN_SIZE'))
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
     summarized_files = []
 
