@@ -4,8 +4,14 @@
 # Ignore specific files
 config.env
 
+# Ignore .env files
+.env
+
 # Ignore all files in the build/ directory
 build/
 
 # Ignore all .txt files in the doc/ directory
 doc/*.txt
+
+# Ignore Python compiled files
+*.pyc
