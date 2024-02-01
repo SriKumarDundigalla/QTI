@@ -1,9 +1,6 @@
 # Ignore all .log files
 *.log
 
-# Ignore specific files
-config.env
-
 # Ignore .env files
 .env
 
