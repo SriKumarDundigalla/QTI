@@ -6,8 +6,11 @@ from dotenv import load_dotenv
 import logging
 
 # Configure basic logging
-logging.basicConfig(filename='app.log', level=logging.INFO, 
+logging.basicConfig(filename='app_al2.log', level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
+
+import os
+import logging
 
 def analyze_directory(directory):
     """
@@ -36,6 +39,7 @@ def analyze_directory(directory):
                 logging.info(f"File added for processing: {file_path}")
 
     return file_details
+
 
 def read_file_content(file_info):
     """
@@ -103,7 +107,7 @@ def summarize_files(api_key, file_details, min_words, max_words):
 
     for file in file_details:
         original_token_count = len(encoding.encode(file['content']))
-
+        print(original_token_count,file['path'])
         if original_token_count > global_token_size:
             client = openai.OpenAI(api_key=api_key)
             prompt_system = "You are a professor developing content for a course in business analytics. You will be provided with text content. Summarize the content without losing information on the important topics covered in the text."
@@ -140,16 +144,54 @@ def summarize_files(api_key, file_details, min_words, max_words):
 
     return summarized_files
 
+def fit_assets_into_chunks(file_details, chunk_size_limit):
+    """
+    Divides the file contents into chunks based on a token size limit.
+
+    :param file_details: List of dictionaries containing file details and content.
+    :param chunk_size_limit: The token size limit for each chunk.
+    :return: A list of chunks, each containing combined content.
+    """
+    sorted_files = sorted(file_details, key=lambda x: x['token_size'], reverse=True)
+
+    def find_best_fit(files, limit, current=[]):
+        if not files:
+            return current
+        if sum(file['token_size'] for file in current) > limit:
+            return None
+        best_fit = current
+        for i in range(len(files)):
+            next_fit = find_best_fit(files[i+1:], limit, current + [files[i]])
+            if next_fit and sum(file['token_size'] for file in next_fit) > sum(file['token_size'] for file in best_fit):
+                best_fit = next_fit
+        return best_fit
+
+    chunks = []
+    while sorted_files:
+        best_chunk = find_best_fit(sorted_files, chunk_size_limit)
+        if best_chunk:
+            chunks.append(''.join(file['content'] for file in best_chunk))
+            for file in best_chunk:
+                sorted_files.remove(file)
+        else:
+            break
+
+    return chunks
+
+
+
+
 # Main execution
 if __name__ == "__main__":
     # Load environment variables from the .env file
     load_dotenv()
 
     # Define the path of the directory to analyze
-    directory_path = "C:/Users/dsksr/Documents/BIG DATA/2024/QTI/GIT/QTI-AI/QTI"
+    directory_path = r"C:\Users\dsksr\Documents\BIG DATA\2024\Independent Study\QTI\GIT\Dev-ai\QTI"
 
-    # Retrieve the OpenAI API key from environment variables
+    # Retrieve the OpenAI API key and chunk size from environment variables
     api_key = os.getenv('OPENAI_API_KEY')
+    chunk_size = int(os.getenv('CHUNK_SIZE', 8000))  # Set default to 2000 if not specified
 
     # Set the minimum and maximum word limits for the summaries
     min_words = 50
@@ -165,13 +207,15 @@ if __name__ == "__main__":
         # Summarize the content of the files using the OpenAI API
         summarized_contents = summarize_files(api_key, file_contents, min_words, max_words)
 
-        # Log the information about the files and their summarized content if it's within the specified word range
-        for file in summarized_contents:
-            word_count = len(file['content'].split())
-            if min_words <= word_count <= max_words:
-                logging.info(f"File summarized: {file['path']}\nContent: {file['content']}\nToken_count:{file['token_size']}")
+        # Fit assets into chunks
+        chunks = fit_assets_into_chunks(summarized_contents, chunk_size)
 
-    # Catch and log any exceptions that occur during the execution
+        # Log the information about the files and their summarized content
+        encoding = tiktoken.encoding_for_model("gpt-3.5-turbo-1106")
+        for chunk in chunks:
+            logging.info(len(encoding.encode(chunk)))
+            logging.info("-"*120)
+
     except Exception as e:
         logging.exception(f"An error occurred during execution: {e}")
 

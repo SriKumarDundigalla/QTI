@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import logging
 
 # Configure basic logging
-logging.basicConfig(filename='app.log', level=logging.INFO, 
+logging.basicConfig(filename='app_al3.log', level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 def analyze_directory(directory):
@@ -140,16 +140,83 @@ def summarize_files(api_key, file_details, min_words, max_words):
 
     return summarized_files
 
+
+def fit_assets_into_chunks(file_details, chunk_size_limit, target_difference=100, max_iterations=10):
+    """
+    Divides the file contents into chunks based on a dynamic token size limit, adjusting the limit to minimize the size discrepancy among chunks.
+
+    :param file_details: List of dictionaries containing file details and content.
+    :param chunk_size_limit: The initial token size limit for each chunk.
+    :param target_difference: The maximum allowed difference in size between the largest and smallest chunk.
+    :param max_iterations: The maximum number of iterations to attempt to achieve the target difference.
+    :return: A list of chunks, each a dictionary containing combined content and total token size.
+    """
+    sorted_files = sorted(file_details, key=lambda x: x['token_size'], reverse=True)
+
+    def find_best_fit(files, limit, current=[]):
+        if not files or sum(file['token_size'] for file in current) > limit:
+            return current
+        best_fit = current
+        for i in range(len(files)):
+            next_fit = find_best_fit(files[i+1:], limit, current + [files[i]])
+            if next_fit and sum(file['token_size'] for file in next_fit) > sum(file['token_size'] for file in best_fit):
+                best_fit = next_fit
+        return best_fit
+
+    def attempt_fit_with_limit(limit):
+        remaining_files = sorted_files[:]
+        chunks = []
+        while remaining_files:
+            best_chunk = find_best_fit(remaining_files, limit)
+            if best_chunk:
+                combined_content = ''.join(file['content'] for file in best_chunk)
+                combined_size = sum(file['token_size'] for file in best_chunk)
+                chunks.append({'content': combined_content, 'total_token_size': combined_size})
+                for file in best_chunk:
+                    remaining_files.remove(file)
+            else:
+                break
+        return chunks
+
+    best_result = []
+    best_difference = float('inf')
+    iteration = 0
+
+    while iteration < max_iterations:
+        chunks = attempt_fit_with_limit(chunk_size_limit)
+        chunk_sizes = [chunk['total_token_size'] for chunk in chunks]
+        max_size = max(chunk_sizes, default=0)
+        min_size = min(chunk_sizes, default=0)
+        difference = max_size - min_size
+
+        if difference <= target_difference:
+            return chunks  # Returning early if target difference is met
+
+        # If this attempt resulted in a closer difference, keep it as the best result
+        if difference < best_difference:
+            best_result = chunks
+            best_difference = difference
+
+        # Adjusting the chunk size limit for the next iteration
+        chunk_size_limit -= (difference - target_difference) // len(chunks) if chunks else 0
+        iteration += 1
+
+    return best_result  # Return the best result found within the allowed iterations
+
+
+
+
 # Main execution
 if __name__ == "__main__":
     # Load environment variables from the .env file
     load_dotenv()
 
     # Define the path of the directory to analyze
-    directory_path = "C:/Users/dsksr/Documents/BIG DATA/2024/QTI/GIT/QTI-AI/QTI"
+    directory_path = r"C:\Users\dsksr\Documents\BIG DATA\2024\Independent Study\QTI\GIT\Dev-ai\QTI"
 
-    # Retrieve the OpenAI API key from environment variables
+    # Retrieve the OpenAI API key and chunk size from environment variables
     api_key = os.getenv('OPENAI_API_KEY')
+    chunk_size = int(os.getenv('CHUNK_SIZE', 8000))  # Set default to 2000 if not specified
 
     # Set the minimum and maximum word limits for the summaries
     min_words = 50
@@ -158,20 +225,22 @@ if __name__ == "__main__":
     try:
         # Analyze the directory and get details of the files present
         file_details = analyze_directory(directory_path)
-
+        print(len(file_details))
         # Retrieve the contents of each file from the analyzed directory
         file_contents = get_file_contents(file_details)
 
         # Summarize the content of the files using the OpenAI API
         summarized_contents = summarize_files(api_key, file_contents, min_words, max_words)
 
-        # Log the information about the files and their summarized content if it's within the specified word range
-        for file in summarized_contents:
-            word_count = len(file['content'].split())
-            if min_words <= word_count <= max_words:
-                logging.info(f"File summarized: {file['path']}\nContent: {file['content']}\nToken_count:{file['token_size']}")
+        # Fit assets into chunks
+        chunks = fit_assets_into_chunks(summarized_contents, chunk_size)
 
-    # Catch and log any exceptions that occur during the execution
+        # Log the information about the files and their summarized content
+        encoding = tiktoken.encoding_for_model("gpt-3.5-turbo-1106")
+        for chunk in chunks:
+            logging.info(len(encoding.encode(chunk['content'])))
+            logging.info("-"*120)
+
     except Exception as e:
         logging.exception(f"An error occurred during execution: {e}")
 
