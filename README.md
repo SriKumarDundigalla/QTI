@@ -1,36 +1,36 @@
 # Algorithm 2
 
-### Algorithm Steps:
+The `create_chunks_from_content_greedy` function follows a specific series of steps to create content chunks using a Greedy approach. Here's a breakdown of the steps involved in this algorithm:
 
-1. **Initialization**:
-   - `all_chunks`: A list to store the final content chunks.
-   - `sorted_file_contents`: The input `file_contents` list is sorted in descending order based on `token_size`. This sorting ensures that larger contents are considered first for chunk creation.
-   - `used_indices`: A set to keep track of indices of `file_contents` that have been added to chunks. This set is crucial for ensuring content is not duplicated across chunks.
+### 1. Initialize Variables
+- `all_chunks`: A list to store the finalized content chunks.
+- `current_chunk`: A string to accumulate content for the current chunk being built.
+- `current_token_count`: An integer to track the total token count of the current chunk.
 
-2. **Outer Loop - Processing Each Chunk**:
-   - Continues as long as there are contents in `sorted_file_contents` that have not been marked as used (i.e., their indices are not in `used_indices`).
-   - Within this loop, a new chunk (`current_chunk`) is started with an empty string, and its token count (`current_token_count`) is set to 0.
+### 2. Sort Content by Token Size
+- The input `file_contents` is sorted in descending order of `token_size`. This prioritization allows the algorithm to consider larger content pieces first, attempting to fit the largest possible pieces into each chunk under the context window limit.
 
-3. **Inner Loop - Adding Content to the Current Chunk**:
-   - Iterates over `sorted_file_contents`. For each item (represented by `i` and `file_content`), the loop checks if the item's index is in `used_indices`. If so, it skips to the next item, as this content has already been added to a chunk.
-   - If the item's index is not in `used_indices`, the function checks if adding this item's content to `current_chunk` would exceed the `context_window_size`.
-     - If adding the content does not exceed the limit, the content is appended to `current_chunk`, and its `token_size` is added to `current_token_count`. The item's index is then added to `used_indices`.
-     - If adding the content would exceed the limit, the item is skipped for the current chunk but remains eligible for future chunks.
+### 3. Iterate Through Sorted Content
+- The function iterates over each content piece in `sorted_file_contents`.
 
-4. **Finalizing the Current Chunk**:
-   - After attempting to add content from all eligible items to `current_chunk`, the function checks if `current_chunk` contains any content.
-     - If it does, `current_chunk` is added to `all_chunks`.
-     - If not (which could happen if remaining contents are too large to fit the current context window), the outer loop is terminated to prevent an infinite loop.
+### 4. Check for New Chunk Necessity
+- For each content piece, it checks if adding its `token_size` to `current_token_count` would exceed the `context_window_size`.
+  - If it would exceed, and `current_chunk` is not empty, the current chunk is added to `all_chunks`, and both `current_chunk` and `current_token_count` are reset to start a new chunk.
+  - This step ensures that each chunk does not exceed the specified `context_window_size`.
 
-5. **Completion**:
-   - Once the outer loop completes (either because all content has been used or no more content can fit within the context window size), the function returns `all_chunks`.
+### 5. Add Content to Chunk
+- If the current content piece fits within the remaining space of the `context_window_size` (including after possibly starting a new chunk), it is added to `current_chunk`, and its `token_size` is added to `current_token_count`.
+  - A newline character is appended after each content piece for readability, ensuring that pieces start on new lines within the chunk.
 
-### Tracking Mechanism (`used_indices`):
+### 6. Finalize Last Chunk
+- After iterating through all content pieces, if there is any content accumulated in `current_chunk` that has not yet been added to `all_chunks`, it is added as the last chunk.
 
-- The `used_indices` set is critical for managing which contents have already been added to chunks. By recording indices of `sorted_file_contents` that have been used, the function efficiently skips over these contents in subsequent iterations, ensuring that each piece of content is only used once.
-- This tracking allows the function to dynamically adjust which contents are considered for each new chunk based on the remaining space in the context window, optimizing the content distribution across chunks.
+### 7. Return Result
+- The function returns `all_chunks`, the list of content chunks created through this process.
 
-### Efficiency Considerations:
+### Greedy Approach Characteristics
+- **Local Optimality**: At each step, the algorithm greedily adds the largest piece of content that fits within the remaining space of the current chunk or starts a new chunk if necessary.
+- **No Backtracking**: Once a piece of content is placed in a chunk, the algorithm does not reconsider or rearrange past decisions, even if a different arrangement might have allowed for a more optimal use of space.
+- **Efficiency**: The algorithm is designed for efficiency, making a single pass through the sorted content and making immediate decisions based on the current state.
 
-- Sorting `file_contents` at the start and using `used_indices` to track content usage are key strategies for efficiently organizing content into chunks. 
-- The use of a set for `used_indices` ensures quick lookups (O(1) complexity) to check whether an index has already been used, contributing to the overall efficiency of the function.
+
