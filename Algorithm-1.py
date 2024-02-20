@@ -140,6 +140,7 @@ def summarize_files(api_key, file_details, min_words, max_words):
         })
 
     return summarized_files
+
 def create_chunks_from_content(file_contents, context_window_str):
     context_window_size = int(context_window_str)  # Convert context window size to integer
     all_chunks = []
