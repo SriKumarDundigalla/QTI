@@ -141,7 +141,58 @@ def summarize_files(api_key, file_details, min_words, max_words):
 
     return summarized_files
 
- 
+def create_chunks_from_content(file_contents, initial_context_window_size, max_iterations = 10, target_diff = 1000):
+    """
+    Adjusts the context window size to minimize the size difference between the largest and smallest chunks.
+    
+    Parameters:
+    - file_contents (list of dict): Each dict contains 'content' and 'token_size'.
+    - initial_context_window_size (int): Starting size for the context window.
+    - max_iterations (int): Maximum number of adjustments to the context window size.
+    - target_diff (int): Target maximum difference in size between the largest and smallest chunk.
+    
+    Returns:
+    - list of str: Chunks of combined content.
+    """
+    context_window_size = initial_context_window_size
+    iteration = 0
+    best_chunks = []
+    best_diff = float('inf')
+
+    while iteration < max_iterations:
+        chunks = []
+        current_chunk = ''
+        current_token_count = 0
+        
+        for content_dict in sorted(file_contents, key=lambda x: x['token_size'], reverse=True):
+            if current_token_count + content_dict['token_size'] <= context_window_size:
+                current_chunk += content_dict['content']
+                current_token_count += content_dict['token_size']
+            else:
+                chunks.append(current_chunk)
+                current_chunk = content_dict['content']
+                current_token_count = content_dict['token_size']
+        
+        if current_chunk:  # Add the last chunk if it exists.
+            chunks.append(current_chunk)
+        
+        # Calculate the difference between the largest and smallest chunk.
+        chunk_sizes = [len(chunk) for chunk in chunks]
+        max_size = max(chunk_sizes)
+        min_size = min(chunk_sizes)
+        diff = max_size - min_size
+        
+        if diff < best_diff:
+            best_diff = diff
+            best_chunks = chunks
+        
+        if diff <= target_diff:
+            break
+        
+        context_window_size -= 1  # Adjust context window size for the next iteration.
+        iteration += 1
+
+    return best_chunks
  
 # Main execution
 if __name__ == "__main__":
@@ -153,7 +204,8 @@ if __name__ == "__main__":
 
     # Retrieve the OpenAI API key from environment variables
     api_key = os.getenv('OPENAI_API_KEY')
-
+    context_window_size =int(os.getenv('context_window_size'))
+    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo-1106")
     # Set the minimum and maximum word limits for the summaries
     min_words = 50
     max_words = 100
@@ -168,11 +220,10 @@ if __name__ == "__main__":
         # Summarize the content of the files using the OpenAI API
         summarized_contents = summarize_files(api_key, file_contents, min_words, max_words)
 
-        # Log the information about the files and their summarized content if it's within the specified word range
-        for file in summarized_contents:
-            word_count = len(file['content'].split())
-            if min_words <= word_count <= max_words:
-                logging.info(f"File summarized: {file['path']}\nContent: {file['content']}\nToken_count:{file['token_size']}")
+       # Log the information about the files and their summarized content if it's within the specified word range
+        chunked_contents = create_chunks_from_content(summarized_contents,context_window_size)
+        for i in chunked_contents:
+            print(len(encoding.encode(i)))
 
     # Catch and log any exceptions that occur during the execution
     except Exception as e:
