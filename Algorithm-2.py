@@ -140,32 +140,55 @@ def summarize_files(api_key, file_details, min_words, max_words):
         })
 
     return summarized_files
-def create_chunks_from_content(file_contents, context_window_str):
-    context_window_size = int(context_window_str)  # Convert context window size to integer
+
+def create_chunks_from_content(file_contents, context_window_size ):
+    """
+    Creates content chunks from a list of file content dictionaries, ensuring that each chunk does not exceed a specified context window size in terms of tokens.
+
+    The function sorts the file contents by their token size in descending order to start chunk creation with the largest content first. It then iteratively adds content to a chunk until the context window size is reached or exceeded. Once a chunk reaches this limit, it's added to the list of all chunks, and the process continues with the creation of a new chunk. The function ensures that all content is used, dividing it into as few chunks as possible without exceeding the specified token limit for each chunk.
+
+    Parameters:
+    - file_contents (list of dict): A list of dictionaries, where each dictionary contains 'content' (str) and 'token_size' (int) keys. 'content' is the text of the file, and 'token_size' is the number of tokens that text consists of.
+    - context_window_size (int): The maximum number of tokens that a single chunk can contain. It defines the upper limit for the size of each content chunk.
+
+    Returns:
+    - list of str: A list of content chunks, where each chunk is a string composed of file contents that together do not exceed the context window size.
+
+    The function prioritizes larger contents for earlier chunks by sorting the input based on token size in descending order. It tracks which contents have been used to ensure that all content is accounted for and to prevent any single content from being used in multiple chunks. If a piece of content is too large to fit into the current chunk without exceeding the context window, it starts a new chunk with that content. The process repeats until all contents have been assigned to a chunk, ensuring efficient use of the context window size.
+    """
+    # Initialize the list to hold all content chunks
     all_chunks = []
-    current_chunk = ""
-    current_token_count = 0
+    # Sort file_contents by 'token_size' in descending order
+    sorted_file_contents = sorted(file_contents, key=lambda x: x['token_size'], reverse=True)
+    # Track indices of contents that have been used
+    used_indices = set()
 
-    for file_content in file_contents:
-        content = file_content['content']
-        token_size = int(file_content['token_size'])  # Ensure token_size is an integer
+    # Outer Loop: Continue until all content has been used
+    while len(used_indices) < len(sorted_file_contents):
+        current_chunk = ""
+        current_token_count = 0
+        # Iterate over sorted_file_contents to try fitting content into the current chunk
+        for i, file_content in enumerate(sorted_file_contents):
+            if i in used_indices:
+                continue  # Skip content that's already been used
+            content = file_content['content']
+            token_size = file_content['token_size']
+            # Check if adding this content exceeds the context window size
+            if current_token_count + token_size <= context_window_size:
+                current_chunk += content  # Add content to the current chunk
+                current_token_count += token_size
+                used_indices.add(i)  # Mark this content as used
 
-        if current_token_count + token_size <= context_window_size:
-            current_chunk += content
-            current_token_count += token_size
-        else:
+        # After trying to add all possible content to the current chunk
+        if current_chunk:  # If the current chunk contains any content, add it to all_chunks
             all_chunks.append(current_chunk)
-            current_chunk = content
-            current_token_count = token_size
-            if token_size > context_window_size:
-                all_chunks.append(current_chunk)
-                current_chunk = ""
-                current_token_count = 0
-
-    if current_chunk:
-        all_chunks.append(current_chunk)
+        else:
+            # If no content could be added (due to all remaining contents being too large),
+            # break the loop to prevent an infinite loop
+            break
 
     return all_chunks
+
 
 
 
@@ -179,7 +202,7 @@ if __name__ == "__main__":
 
     # Retrieve the OpenAI API key from environment variables
     api_key = os.getenv('OPENAI_API_KEY')
-    context_window_size =os.getenv('context_window_size')
+    context_window_size =int(os.getenv('context_window_size'))
     # Set the minimum and maximum word limits for the summaries
     min_words = 50
     max_words = 100
