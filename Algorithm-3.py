@@ -141,7 +141,7 @@ def summarize_files(api_key, file_details, min_words, max_words):
 
     return summarized_files
 
-def create_chunks_from_content(file_contents, initial_context_window_size, max_iterations = 10, target_diff = 1000):
+def create_chunks_from_content(file_contents, initial_context_window_size, max_iterations = 30, target_diff = 1000):
     """
     Adjusts the context window size to minimize the size difference between the largest and smallest chunks.
     
@@ -166,11 +166,12 @@ def create_chunks_from_content(file_contents, initial_context_window_size, max_i
         
         for content_dict in sorted(file_contents, key=lambda x: x['token_size'], reverse=True):
             if current_token_count + content_dict['token_size'] <= context_window_size:
-                current_chunk += content_dict['content']
+                # Ensure each content piece starts on a new line
+                current_chunk += (content_dict['content'] + "\n") if current_chunk else content_dict['content']
                 current_token_count += content_dict['token_size']
             else:
                 chunks.append(current_chunk)
-                current_chunk = content_dict['content']
+                current_chunk = content_dict['content'] + "\n"
                 current_token_count = content_dict['token_size']
         
         if current_chunk:  # Add the last chunk if it exists.
