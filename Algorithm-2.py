@@ -175,7 +175,7 @@ def create_chunks_from_content(file_contents, context_window_size ):
             token_size = file_content['token_size']
             # Check if adding this content exceeds the context window size
             if current_token_count + token_size <= context_window_size:
-                current_chunk += content  # Add content to the current chunk
+                current_chunk += content + "\n" # Add content to the current chunk
                 current_token_count += token_size
                 used_indices.add(i)  # Mark this content as used
 
