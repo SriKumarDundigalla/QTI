@@ -34,3 +34,4 @@ The `create_chunks_from_content_greedy` function follows a specific series of st
 - **Efficiency**: The algorithm is designed for efficiency, making a single pass through the sorted content and making immediate decisions based on the current state.
 
 
+![Alt text for the image](https://github.com/SriKumarDundigalla/QTI/blob/AI-Algorithm-2/Algorithm-2.png)
