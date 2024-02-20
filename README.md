@@ -1,45 +1,41 @@
-# Markdown to QTI Converter Application
+# Algorithm 3
 
-## Overview
-This application converts Markdown files containing questions and learning outcomes into QTI (Question and Test Interoperability) format. It's designed for users who wish to create quizzes for learning platforms from Markdown-formatted text.
+The `create_chunks_from_content_greedy_HT` function aims to dynamically adjust the context window size to balance the sizes of content chunks, utilizing a Greedy approach to select content for each chunk. Here's a step-by-step flow of how the algorithm works:
 
-## How to Use
+### Initialization
+1. **Set Initial Conditions**: Initialize variables like `context_window_size` to the `initial_context_window_size`, set `iteration` to 0, and prepare empty lists for `best_chunks` and tracking the `best_diff` (difference between the largest and smallest chunk sizes).
 
-### Prerequisites for Successful Conversion
+### Iterative Adjustment Loop
+2. **Start Iterative Process**: Begin a loop that will run up to `max_iterations` times, aiming to find the best chunk configuration that minimizes the size difference (`diff`) between the largest and smallest chunks.
 
-**Note: It is essential to format your Markdown file correctly for the application to work as intended.**
+### Chunk Creation Process
+3. **Sort and Prepare Content**: Sort `file_contents` in descending order by `token_size` to prioritize larger content pieces. This sorting is done at the beginning of each iteration to reassess the content order as the context window size adjusts.
+4. **Create Chunks with Current Window Size**: 
+   - Initialize a new set of chunks (`chunks`) and reset `current_chunk` and `current_token_count` for accumulating content.
+   - Use a nested loop to iterate through `remaining_contents`, attempting to add content to the current chunk without exceeding the `context_window_size`.
+   - If a piece of content fits, add it to `current_chunk`, update `current_token_count`, and remove this piece from `remaining_contents`. Break the inner loop to re-evaluate the best next piece to add.
 
-- **Proper Markdown Formatting**: Your Markdown file must be structured in a specific way, particularly for quizzes and learning outcomes. The application relies on this format to accurately convert the content into QTI format.
+### Evaluating and Adjusting Chunks
+5. **Evaluate Created Chunks**:
+   - Once no more content can be added to the current chunk or `remaining_contents` is empty, evaluate the set of created chunks.
+   - Calculate the size difference (`diff`) between the largest and smallest chunks.
+   - If this `diff` is less than `best_diff`, update `best_chunks` and `best_diff` with the current configuration.
 
-- **Example Files for Reference**: Please refer to the provided examples ([mapreduce_test2.md](https://github.com/SriKumarDundigalla/QTI/blob/main/mapreduce_test2.md) or [mongo_test1.md](https://github.com/SriKumarDundigalla/QTI/blob/main/mongo_test1.md)) as a template. These files demonstrate the necessary structure, especially how to map questions in the learning outcomes table.
+### Dynamic Adjustment
+6. **Adjust Context Window Size**:
+   - If the size difference (`diff`) is within the `target_diff` or there are no more contents to try adjusting, conclude the adjustment process.
+   - Otherwise, decrement `context_window_size` to try a smaller window size in the next iteration, aiming to find a better balance between chunk sizes.
 
-- **Mandatory Learning Outcomes Mapping**: Ensure that your quiz questions are correctly mapped to the respective learning outcomes in your Markdown file, similar to the structure used in the example files. This mapping is crucial for the application to accurately organize and convert the quiz content.
+### Conclusion
+7. **Finalize and Return Best Chunks**:
+   - After completing all iterations or achieving the target size difference, return `best_chunks` as the optimal set of content chunks based on the dynamic adjustments.
 
-### Steps for Usage
-1. **Place Files in Same Folder**: Put `application.exe` and your Markdown file in the same directory.
+### Greedy Selection Within Each Iteration
+- The Greedy aspect of this algorithm manifests in how content is selected for each chunk: prioritizing the inclusion of the largest piece that fits within the remaining space of the current context window size, and then immediately removing it from further consideration.
+- This Greedy choice is made within the context of the current iteration's window size, without foresight into how future adjustments to the window size or selections might affect overall optimality.
 
-2. **Run the Executable**: Double-click `application.exe` to run the application.
-
-3. **Input Markdown Filename**: When prompted, enter the name of your Markdown file, including the `.md` extension.
-
-4. **Input Prefix for QTI Files**: Next, enter a prefix for the QTI files. This prefix will precede the names of the output QTI files.
-
-5. **Upload to Learning Platform**: The application generates QTI files in a zip format, which you can upload to various learning platforms. This allows you to create quizzes and save them to question banks.
-
-6. **Output Files**: All these files are neatly organized in an output folder created by the application. Inside this folder, you'll find two subfolders:
-   - **Text Files**: Contains all the quiz files in plain text format.
-   - **QTI Files**: Contains the QTI formatted files, ready to be uploaded to your learning management system.
-
-### Technical Details
-- This application is developed in Python 3 and uses libraries such as `re` (for regular expressions), `subprocess`, and `os`.
-- To convert the Python script into an executable file, `pyinstaller` was utilized.
-
-## Installation Requirements
-- No additional installation is required for running `application.exe`.
-- For Markdown file preparation, any text editor capable of saving files in Markdown format will suffice. Some popular options include [Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), [Sublime Text](https://www.sublimetext.com/), [Notepad++](https://notepad-plus-plus.org/), and [MarkdownPad](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-## Support
-If you encounter any issues or have questions about using the application, please feel free to contact [srikumar@usf.edu](mailto:srikumar@usf.edu)
+### Dynamic Window Adjustment
+- The unique feature of this algorithm is its iterative adjustment of the context window size based on the observed size differences between chunks, aiming to minimize these differences and achieve a more balanced chunk configuration.
 
 
 
