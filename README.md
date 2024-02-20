@@ -1,45 +1,36 @@
-# Markdown to QTI Converter Application
+# Algorithm 2
 
-## Overview
-This application converts Markdown files containing questions and learning outcomes into QTI (Question and Test Interoperability) format. It's designed for users who wish to create quizzes for learning platforms from Markdown-formatted text.
+### Algorithm Steps:
 
-## How to Use
+1. **Initialization**:
+   - `all_chunks`: A list to store the final content chunks.
+   - `sorted_file_contents`: The input `file_contents` list is sorted in descending order based on `token_size`. This sorting ensures that larger contents are considered first for chunk creation.
+   - `used_indices`: A set to keep track of indices of `file_contents` that have been added to chunks. This set is crucial for ensuring content is not duplicated across chunks.
 
-### Prerequisites for Successful Conversion
+2. **Outer Loop - Processing Each Chunk**:
+   - Continues as long as there are contents in `sorted_file_contents` that have not been marked as used (i.e., their indices are not in `used_indices`).
+   - Within this loop, a new chunk (`current_chunk`) is started with an empty string, and its token count (`current_token_count`) is set to 0.
 
-**Note: It is essential to format your Markdown file correctly for the application to work as intended.**
+3. **Inner Loop - Adding Content to the Current Chunk**:
+   - Iterates over `sorted_file_contents`. For each item (represented by `i` and `file_content`), the loop checks if the item's index is in `used_indices`. If so, it skips to the next item, as this content has already been added to a chunk.
+   - If the item's index is not in `used_indices`, the function checks if adding this item's content to `current_chunk` would exceed the `context_window_size`.
+     - If adding the content does not exceed the limit, the content is appended to `current_chunk`, and its `token_size` is added to `current_token_count`. The item's index is then added to `used_indices`.
+     - If adding the content would exceed the limit, the item is skipped for the current chunk but remains eligible for future chunks.
 
-- **Proper Markdown Formatting**: Your Markdown file must be structured in a specific way, particularly for quizzes and learning outcomes. The application relies on this format to accurately convert the content into QTI format.
+4. **Finalizing the Current Chunk**:
+   - After attempting to add content from all eligible items to `current_chunk`, the function checks if `current_chunk` contains any content.
+     - If it does, `current_chunk` is added to `all_chunks`.
+     - If not (which could happen if remaining contents are too large to fit the current context window), the outer loop is terminated to prevent an infinite loop.
 
-- **Example Files for Reference**: Please refer to the provided examples ([mapreduce_test2.md](https://github.com/SriKumarDundigalla/QTI/blob/main/mapreduce_test2.md) or [mongo_test1.md](https://github.com/SriKumarDundigalla/QTI/blob/main/mongo_test1.md)) as a template. These files demonstrate the necessary structure, especially how to map questions in the learning outcomes table.
+5. **Completion**:
+   - Once the outer loop completes (either because all content has been used or no more content can fit within the context window size), the function returns `all_chunks`.
 
-- **Mandatory Learning Outcomes Mapping**: Ensure that your quiz questions are correctly mapped to the respective learning outcomes in your Markdown file, similar to the structure used in the example files. This mapping is crucial for the application to accurately organize and convert the quiz content.
+### Tracking Mechanism (`used_indices`):
 
-### Steps for Usage
-1. **Place Files in Same Folder**: Put `application.exe` and your Markdown file in the same directory.
+- The `used_indices` set is critical for managing which contents have already been added to chunks. By recording indices of `sorted_file_contents` that have been used, the function efficiently skips over these contents in subsequent iterations, ensuring that each piece of content is only used once.
+- This tracking allows the function to dynamically adjust which contents are considered for each new chunk based on the remaining space in the context window, optimizing the content distribution across chunks.
 
-2. **Run the Executable**: Double-click `application.exe` to run the application.
+### Efficiency Considerations:
 
-3. **Input Markdown Filename**: When prompted, enter the name of your Markdown file, including the `.md` extension.
-
-4. **Input Prefix for QTI Files**: Next, enter a prefix for the QTI files. This prefix will precede the names of the output QTI files.
-
-5. **Upload to Learning Platform**: The application generates QTI files in a zip format, which you can upload to various learning platforms. This allows you to create quizzes and save them to question banks.
-
-6. **Output Files**: All these files are neatly organized in an output folder created by the application. Inside this folder, you'll find two subfolders:
-   - **Text Files**: Contains all the quiz files in plain text format.
-   - **QTI Files**: Contains the QTI formatted files, ready to be uploaded to your learning management system.
-
-### Technical Details
-- This application is developed in Python 3 and uses libraries such as `re` (for regular expressions), `subprocess`, and `os`.
-- To convert the Python script into an executable file, `pyinstaller` was utilized.
-
-## Installation Requirements
-- No additional installation is required for running `application.exe`.
-- For Markdown file preparation, any text editor capable of saving files in Markdown format will suffice. Some popular options include [Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), [Sublime Text](https://www.sublimetext.com/), [Notepad++](https://notepad-plus-plus.org/), and [MarkdownPad](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-## Support
-If you encounter any issues or have questions about using the application, please feel free to contact [srikumar@usf.edu](mailto:srikumar@usf.edu)
-
-
-
+- Sorting `file_contents` at the start and using `used_indices` to track content usage are key strategies for efficiently organizing content into chunks. 
+- The use of a set for `used_indices` ensures quick lookups (O(1) complexity) to check whether an index has already been used, contributing to the overall efficiency of the function.
