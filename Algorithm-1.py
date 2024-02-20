@@ -151,7 +151,7 @@ def create_chunks_from_content(file_contents, context_window_size):
         token_size = int(file_content['token_size'])  # Ensure token_size is an integer
 
         if current_token_count + token_size <= context_window_size:
-            current_chunk += content
+            current_chunk += content + "\n"
             current_token_count += token_size
         else:
             all_chunks.append(current_chunk)
