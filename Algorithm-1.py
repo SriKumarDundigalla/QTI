@@ -141,6 +141,7 @@ def summarize_files(api_key, file_details, min_words, max_words):
 
     return summarized_files
 
+
 # Main execution
 if __name__ == "__main__":
     # Load environment variables from the .env file
