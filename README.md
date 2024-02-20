@@ -1,45 +1,40 @@
-# Markdown to QTI Converter Application
+# Algorithm 1
 
-## Overview
-This application converts Markdown files containing questions and learning outcomes into QTI (Question and Test Interoperability) format. It's designed for users who wish to create quizzes for learning platforms from Markdown-formatted text.
+Here are the detailed steps of the `create_chunks_from_content` function with explanations of its loops and conditions:
 
-## How to Use
+### Step 1: Initialize Variables
+- `all_chunks`: A list that will store the final content chunks.
+- `current_chunk`: A string that temporarily accumulates content for the current chunk.
+- `current_token_count`: An integer tracking the number of tokens in the `current_chunk`.
 
-### Prerequisites for Successful Conversion
+### Step 2: Iterate Through File Contents
+- A for-loop iterates over each item in `file_contents`, a list of dictionaries where each dictionary contains the keys `content` (the text of the file) and `token_size` (the number of tokens in the text).
 
-**Note: It is essential to format your Markdown file correctly for the application to work as intended.**
+### Step 3: Process Each File Content
+- For each `file_content` in the loop:
+  - Retrieve the `content` and `token_size` from the dictionary.
+  - Convert `token_size` to an integer to ensure it is in the correct format for arithmetic operations.
 
-- **Proper Markdown Formatting**: Your Markdown file must be structured in a specific way, particularly for quizzes and learning outcomes. The application relies on this format to accurately convert the content into QTI format.
+### Step 4: Check If Content Fits in the Current Chunk
+- An if-statement checks whether adding the current file content's `token_size` to `current_token_count` would exceed `context_window_size`.
+  - If **not exceeding**:
+    - The file content is added to `current_chunk`.
+    - `current_token_count` is incremented by the `token_size` of the current content.
+  - If **exceeding**:
+    - The `current_chunk` is appended to `all_chunks`, as it has reached or exceeded the `context_window_size`.
+    - A new `current_chunk` is started with the current file content, and `current_token_count` is reset to the `token_size` of the current content.
 
-- **Example Files for Reference**: Please refer to the provided examples ([mapreduce_test2.md](https://github.com/SriKumarDundigalla/QTI/blob/main/mapreduce_test2.md) or [mongo_test1.md](https://github.com/SriKumarDundigalla/QTI/blob/main/mongo_test1.md)) as a template. These files demonstrate the necessary structure, especially how to map questions in the learning outcomes table.
+### Step 5: Special Case for Large Content
+- Within the else-block, there's a check to see if the `token_size` of the current content alone exceeds the `context_window_size`.
+  - If so, the current content is directly appended to `all_chunks` as it cannot fit within any chunk without exceeding the limit.
+  - A new `current_chunk` is started and initialized as an empty string, and `current_token_count` is reset to 0.
 
-- **Mandatory Learning Outcomes Mapping**: Ensure that your quiz questions are correctly mapped to the respective learning outcomes in your Markdown file, similar to the structure used in the example files. This mapping is crucial for the application to accurately organize and convert the quiz content.
+### Step 6: Finalize Last Chunk
+- After the loop, there's a check if `current_chunk` contains any content (it may not have been added to `all_chunks` if the loop ended before reaching the `context_window_size` again).
+  - If `current_chunk` is not empty, it is appended to `all_chunks`.
 
-### Steps for Usage
-1. **Place Files in Same Folder**: Put `application.exe` and your Markdown file in the same directory.
+### Step 7: Return the Chunks
+- The function returns `all_chunks`, the list containing all content chunks created.
 
-2. **Run the Executable**: Double-click `application.exe` to run the application.
-
-3. **Input Markdown Filename**: When prompted, enter the name of your Markdown file, including the `.md` extension.
-
-4. **Input Prefix for QTI Files**: Next, enter a prefix for the QTI files. This prefix will precede the names of the output QTI files.
-
-5. **Upload to Learning Platform**: The application generates QTI files in a zip format, which you can upload to various learning platforms. This allows you to create quizzes and save them to question banks.
-
-6. **Output Files**: All these files are neatly organized in an output folder created by the application. Inside this folder, you'll find two subfolders:
-   - **Text Files**: Contains all the quiz files in plain text format.
-   - **QTI Files**: Contains the QTI formatted files, ready to be uploaded to your learning management system.
-
-### Technical Details
-- This application is developed in Python 3 and uses libraries such as `re` (for regular expressions), `subprocess`, and `os`.
-- To convert the Python script into an executable file, `pyinstaller` was utilized.
-
-## Installation Requirements
-- No additional installation is required for running `application.exe`.
-- For Markdown file preparation, any text editor capable of saving files in Markdown format will suffice. Some popular options include [Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), [Sublime Text](https://www.sublimetext.com/), [Notepad++](https://notepad-plus-plus.org/), and [MarkdownPad](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-## Support
-If you encounter any issues or have questions about using the application, please feel free to contact [srikumar@usf.edu](mailto:srikumar@usf.edu)
-
-
-
+## Flow Chart
+![Flow Chart](https://github.com/SriKumarDundigalla/QTI/blob/AI-Algorithm-1/Algorithm%201%20Flow%20chart.png)
