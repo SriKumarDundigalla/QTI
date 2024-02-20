@@ -141,6 +141,31 @@ def summarize_files(api_key, file_details, min_words, max_words):
 
     return summarized_files
 
+def create_chunks_from_content(file_contents, context_window_size):
+    all_chunks = []
+    current_chunk = ""
+    current_token_count = 0
+
+    for file_content in file_contents:
+        content = file_content['content']
+        token_size = int(file_content['token_size'])  # Ensure token_size is an integer
+
+        if current_token_count + token_size <= context_window_size:
+            current_chunk += content
+            current_token_count += token_size
+        else:
+            all_chunks.append(current_chunk)
+            current_chunk = content
+            current_token_count = token_size
+            if token_size > context_window_size:
+                all_chunks.append(current_chunk)
+                current_chunk = ""
+                current_token_count = 0
+
+    if current_chunk:
+        all_chunks.append(current_chunk)
+
+    return all_chunks
 
 # Main execution
 if __name__ == "__main__":
@@ -152,7 +177,10 @@ if __name__ == "__main__":
 
     # Retrieve the OpenAI API key from environment variables
     api_key = os.getenv('OPENAI_API_KEY')
-
+     # Retrieve the OpenAI API key from environment variables
+    api_key = os.getenv('OPENAI_API_KEY')
+    context_window_size =int(os.getenv('context_window_size'))
+    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo-1106")
     # Set the minimum and maximum word limits for the summaries
     min_words = 50
     max_words = 100
@@ -167,11 +195,9 @@ if __name__ == "__main__":
         # Summarize the content of the files using the OpenAI API
         summarized_contents = summarize_files(api_key, file_contents, min_words, max_words)
 
-        # Log the information about the files and their summarized content if it's within the specified word range
-        for file in summarized_contents:
-            word_count = len(file['content'].split())
-            if min_words <= word_count <= max_words:
-                logging.info(f"File summarized: {file['path']}\nContent: {file['content']}\nToken_count:{file['token_size']}")
+        chunked_contents = create_chunks_from_content(summarized_contents,context_window_size)
+        for i in chunked_contents:
+            print(len(encoding.encode(i)))
 
     # Catch and log any exceptions that occur during the execution
     except Exception as e:
