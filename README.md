@@ -1,41 +1,39 @@
 # Algorithm 3
+The `create_chunks_from_content_greedy_HT` function is designed to iteratively adjust the size of content chunks to minimize the size difference between the largest and smallest chunks. It employs a Greedy approach combined with an iterative adjustment of the context window size to meet a target difference or to optimize the chunk sizes as much as possible within a given number of iterations. Here's a detailed breakdown of the steps and processes involved in this algorithm:
 
-The `create_chunks_from_content_greedy_HT` function aims to dynamically adjust the context window size to balance the sizes of content chunks, utilizing a Greedy approach to select content for each chunk. Here's a step-by-step flow of how the algorithm works:
+### Step 1: Initialize Variables
+- `context_window_size` is set to the `initial_context_window_size`.
+- `iteration` tracks the number of adjustments made to the context window size.
+- `best_chunks` stores the best chunk configuration found so far, based on the smallest difference between the largest and smallest chunks (`best_diff`).
+- `best_diff` is initialized to infinity to ensure any first calculated difference will be considered better.
 
-### Initialization
-1. **Set Initial Conditions**: Initialize variables like `context_window_size` to the `initial_context_window_size`, set `iteration` to 0, and prepare empty lists for `best_chunks` and tracking the `best_diff` (difference between the largest and smallest chunk sizes).
+### Step 2: Iterative Adjustment Loop
+- The algorithm enters a loop that will continue until either the maximum number of iterations (`max_iterations`) is reached or the target difference between chunk sizes (`target_diff`) is achieved.
 
-### Iterative Adjustment Loop
-2. **Start Iterative Process**: Begin a loop that will run up to `max_iterations` times, aiming to find the best chunk configuration that minimizes the size difference (`diff`) between the largest and smallest chunks.
+### Step 3: Prepare for Chunk Creation
+- Within each iteration, the function prepares a list of content pieces (`remaining_contents`), sorted by `token_size` in descending order, for chunk creation.
+- A new set of chunks (`chunks`) is initialized along with variables for constructing the current chunk (`current_chunk` and `current_token_count`).
 
-### Chunk Creation Process
-3. **Sort and Prepare Content**: Sort `file_contents` in descending order by `token_size` to prioritize larger content pieces. This sorting is done at the beginning of each iteration to reassess the content order as the context window size adjusts.
-4. **Create Chunks with Current Window Size**: 
-   - Initialize a new set of chunks (`chunks`) and reset `current_chunk` and `current_token_count` for accumulating content.
-   - Use a nested loop to iterate through `remaining_contents`, attempting to add content to the current chunk without exceeding the `context_window_size`.
-   - If a piece of content fits, add it to `current_chunk`, update `current_token_count`, and remove this piece from `remaining_contents`. Break the inner loop to re-evaluate the best next piece to add.
+### Step 4: Greedy Chunk Filling
+- The function enters a nested loop to fill chunks with content pieces from `remaining_contents`:
+  - It attempts to add the largest piece that fits within the remaining space of the `context_window_size`.
+  - Upon successfully adding a piece, it is removed from `remaining_contents`, and the loop restarts to find the next largest piece that fits.
+  - If no piece can be added without exceeding `context_window_size`, the current chunk is finalized and added to `chunks`, and a new chunk is started.
+  - This process repeats until no more pieces can be added to any chunk.
 
-### Evaluating and Adjusting Chunks
-5. **Evaluate Created Chunks**:
-   - Once no more content can be added to the current chunk or `remaining_contents` is empty, evaluate the set of created chunks.
-   - Calculate the size difference (`diff`) between the largest and smallest chunks.
-   - If this `diff` is less than `best_diff`, update `best_chunks` and `best_diff` with the current configuration.
+### Step 5: Evaluate and Store Best Configuration
+- After all possible chunks are created for the current iteration, the function evaluates this configuration:
+  - It calculates the size difference between the largest and smallest chunks.
+  - If this difference is less than `best_diff`, the current configuration is stored as the best found so far.
+  - The loop breaks early if the target difference is met or if there are no remaining content pieces to adjust.
 
-### Dynamic Adjustment
-6. **Adjust Context Window Size**:
-   - If the size difference (`diff`) is within the `target_diff` or there are no more contents to try adjusting, conclude the adjustment process.
-   - Otherwise, decrement `context_window_size` to try a smaller window size in the next iteration, aiming to find a better balance between chunk sizes.
+### Step 6: Adjust Context Window Size
+- If the target difference has not been met, the `context_window_size` is decreased by 1, and the next iteration begins, aiming to find a better chunk configuration with the adjusted window size.
 
-### Conclusion
-7. **Finalize and Return Best Chunks**:
-   - After completing all iterations or achieving the target size difference, return `best_chunks` as the optimal set of content chunks based on the dynamic adjustments.
+### Step 7: Return Best Chunks
+- Once the loop concludes (either by meeting the target difference, exhausting `max_iterations`, or running out of content pieces to adjust), the function returns the best chunk configuration found (`best_chunks`).
 
-### Greedy Selection Within Each Iteration
-- The Greedy aspect of this algorithm manifests in how content is selected for each chunk: prioritizing the inclusion of the largest piece that fits within the remaining space of the current context window size, and then immediately removing it from further consideration.
-- This Greedy choice is made within the context of the current iteration's window size, without foresight into how future adjustments to the window size or selections might affect overall optimality.
+This algorithm uniquely combines a Greedy approach for chunk filling with an iterative process for optimizing chunk sizes relative to each other, aiming to minimize the variance in chunk sizes within the constraints of the specified parameters.
 
-### Dynamic Window Adjustment
-- The unique feature of this algorithm is its iterative adjustment of the context window size based on the observed size differences between chunks, aiming to minimize these differences and achieve a more balanced chunk configuration.
-
-
+![Alt text for the image](https://github.com/SriKumarDundigalla/QTI/blob/AI-Algorithm-3/Algorithm3.png)
 
