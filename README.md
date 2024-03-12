@@ -1,36 +1,42 @@
-# Algoritm 1
-### Step 1: Initialize Variables
-- `context_window_size` is set by converting `context_window_str` to an integer. This variable determines the maximum token size for each chunk.
-- `all_chunks` is initialized as an empty list. This list will eventually contain all the content chunks that are created.
-- `current_chunk` is initialized as an empty string. It temporarily holds the content being aggregated into the current chunk.
-- `current_token_count` is set to 0. It keeps track of the number of tokens in `current_chunk`.
+# Markdown to QTI Converter Application
 
-### Step 2: Iterate Over File Contents
-- The function iterates over each item in `file_contents` using a `for` loop. Each item (`file_content`) represents a single file's content and associated metadata (like token size).
+## Overview
+This application converts Markdown files containing questions and learning outcomes into QTI (Question and Test Interoperability) format. It's designed for users who wish to create quizzes for learning platforms from Markdown-formatted text.
 
-### Step 3: Process Each File's Content
-- For each `file_content`, the function retrieves `content` (the actual text of the file) and `token_size` (the number of tokens in the file's content, converted to an integer for safety).
+## How to Use
 
-### Step 4: Check If Current Content Fits in the Current Chunk
-- The function checks if adding the current file's `content` to `current_chunk` would cause the total number of tokens (`current_token_count + token_size`) to exceed `context_window_size`.
-  - If not, the file's `content` is appended to `current_chunk`, and `current_token_count` is updated accordingly.
-  - If yes, the function proceeds to the next steps to handle the overflow.
+### Prerequisites for Successful Conversion
 
-### Step 5: Handle Overflow and Start a New Chunk
-- When the addition of the current file's `content` would exceed the `context_window_size`, the current state of `current_chunk` (before adding the new content) is appended to `all_chunks`. This marks the completion of the current chunk.
-- Afterward, `current_chunk` is reset to contain just the current file's `content`, and `current_token_count` is reset to the current file's `token_size`.
-- There's a special condition checked here: if the `token_size` of the current content itself exceeds the `context_window_size`, it is directly appended to `all_chunks` as its own chunk, and `current_chunk` and `current_token_count` are reset for the next iteration.
+**Note: It is essential to format your Markdown file correctly for the application to work as intended.**
 
-### Step 6: Finalize Remaining Content
-- After iterating through all file contents, there might be content in `current_chunk` that hasn't been added to `all_chunks` yet (because it didn't trigger the overflow condition). The function checks if `current_chunk` is not empty and appends any remaining content to `all_chunks`.
+- **Proper Markdown Formatting**: Your Markdown file must be structured in a specific way, particularly for quizzes and learning outcomes. The application relies on this format to accurately convert the content into QTI format.
 
-### Step 7: Return the List of Chunks
-- Finally, the function returns `all_chunks`, which now contains all the content chunks that have been created.
+- **Example Files for Reference**: Please refer to the provided examples ([mapreduce_test2.md](https://github.com/SriKumarDundigalla/QTI/blob/main/mapreduce_test2.md) or [mongo_test1.md](https://github.com/SriKumarDundigalla/QTI/blob/main/mongo_test1.md)) as a template. These files demonstrate the necessary structure, especially how to map questions in the learning outcomes table.
 
-## Flow Chart
+- **Mandatory Learning Outcomes Mapping**: Ensure that your quiz questions are correctly mapped to the respective learning outcomes in your Markdown file, similar to the structure used in the example files. This mapping is crucial for the application to accurately organize and convert the quiz content.
 
+### Steps for Usage
+1. **Place Files in Same Folder**: Put `application.exe` and your Markdown file in the same directory.
 
+2. **Run the Executable**: Double-click `application.exe` to run the application.
 
-<img src="https://github.com/SriKumarDundigalla/QTI/blob/main/Algorithm1_Flow_Chart.png" alt="Image Description" style="width: 1000px; height: 1000px;"> 
+3. **Input Markdown Filename**: When prompted, enter the name of your Markdown file, including the `.md` extension.
 
+4. **Input Prefix for QTI Files**: Next, enter a prefix for the QTI files. This prefix will precede the names of the output QTI files.
 
+5. **Upload to Learning Platform**: The application generates QTI files in a zip format, which you can upload to various learning platforms. This allows you to create quizzes and save them to question banks.
+
+6. **Output Files**: All these files are neatly organized in an output folder created by the application. Inside this folder, you'll find two subfolders:
+   - **Text Files**: Contains all the quiz files in plain text format.
+   - **QTI Files**: Contains the QTI formatted files, ready to be uploaded to your learning management system.
+
+### Technical Details
+- This application is developed in Python 3 and uses libraries such as `re` (for regular expressions), `subprocess`, and `os`.
+- To convert the Python script into an executable file, `pyinstaller` was utilized.
+
+## Installation Requirements
+- No additional installation is required for running `application.exe`.
+- For Markdown file preparation, any text editor capable of saving files in Markdown format will suffice. Some popular options include [Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), [Sublime Text](https://www.sublimetext.com/), [Notepad++](https://notepad-plus-plus.org/), and [MarkdownPad](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+
+## Support
+If you encounter any issues or have questions about using the application, please feel free to contact [srikumar@usf.edu](mailto:srikumar@usf.edu)
